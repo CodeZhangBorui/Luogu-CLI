@@ -58,7 +58,7 @@ def current_user() -> dict:
             'logged': False,
         }
 
-def load_logstate() -> bool:
+def load_logstate(cmd_only=False) -> bool:
     '''从 logstate.json 中获取上次登录信息。'''
     global cookies
     try:
@@ -66,11 +66,12 @@ def load_logstate() -> bool:
             logstate = json.loads(file.read())
             cookies = logstate['cookies']
             headers = logstate['headers']
-            data = current_user()
-            user_log['logged'] = True
-            user_log['username'] = data['userdata']['name']
-            print(f"[bold yellow]欢迎回来，{user_log['username']}！[/bold yellow]")
-            print(f"已从 [bold blue]logstate.json[/bold blue] 读取用户状态。")
+            if not cmd_only:
+                data = current_user()
+                user_log['logged'] = True
+                user_log['username'] = data['userdata']['name']
+                print(f"[bold yellow]欢迎回来，{user_log['username']}！[/bold yellow]")
+                print(f"已从 [bold blue]logstate.json[/bold blue] 读取用户状态。")
             return True
     except:
         return False

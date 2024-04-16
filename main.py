@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 
 from rich import print
@@ -58,41 +59,38 @@ def prompt_header() -> str:
         return "~[green]#[/green] "
     
 # Initalization
-print(f"Luogu CLI [blue]v{APP_VERSION}[/blue]")
-print("输入 [bold green]help[/bold green] 查看帮助。")
-if not os.path.exists('saving'):
-    os.makedirs('saving')
-    os.makedirs('saving/problem')
-    os.makedirs('saving/solution')
-    os.makedirs('saving/training')
-    os.makedirs('saving/discuss')
-if check_internet():
-    commands = online_commands
-    luogu.pass_js_challenge()
-    if not luogu.load_logstate():
-        luogu.get_client_id()
-        luogu.get_csrf()
-        print("您可以使用 [bold green]login[/bold green] 命令登录。")
+if len(sys.argv) > 1:
+    if check_internet():
+        commands = online_commands
+        luogu.load_logstate(cmd_only=True)
+    else:
+        commands = offline_commands
+        print("[bold red]无法连接到网络，使用离线模式。[/bold red]")
 else:
-    commands = offline_commands
-    print("[bold red]无法连接到网络，使用离线模式。[/bold red]")
-print()
+    print(f"Luogu CLI [blue]v{APP_VERSION}[/blue]")
+    print("输入 [bold green]help[/bold green] 查看帮助。")
+    if not os.path.exists('saving'):
+        os.makedirs('saving')
+        os.makedirs('saving/problem')
+        os.makedirs('saving/solution')
+        os.makedirs('saving/training')
+        os.makedirs('saving/discuss')
+    if check_internet():
+        commands = online_commands
+        luogu.pass_js_challenge()
+        if not luogu.load_logstate():
+            luogu.get_client_id()
+            luogu.get_csrf()
+            print("您可以使用 [bold green]login[/bold green] 命令登录。")
+    else:
+        commands = offline_commands
+        print("[bold red]无法连接到网络，使用离线模式。[/bold red]")
+    print()
 
-while True:
-    # Prompt Repeats
-    print(prompt_header(), end='')
-    try:
-        prompt = input()
-    except KeyboardInterrupt:
-        print("输入 [bold red]exit[/bold red] 退出 CLI。")
-        continue
-    if not prompt:
-        continue
+if len(sys.argv) > 1:
+    cmd = sys.argv[1:]
     # Command Parsing
-    cmd = prompt.split(' ')
-    if cmd[0] == 'exit':
-        break
-    elif cmd[0] in commands:
+    if cmd[0] in commands:
         try:
             commands[cmd[0]](*cmd[1:])
         except Exception as e:
@@ -103,5 +101,31 @@ while True:
                 print(f"[bold red]命令 {cmd[0]} 执行时出现错误。[/bold red]")
     else:
         print(f"无效的命令 [bold red]{cmd[0]}[/bold red]。输入 [bold green]help[/bold green] 查看帮助。")
-    print()
-    
+else:
+    while True:
+        # Prompt Repeats
+        print(prompt_header(), end='')
+        try:
+            prompt = input()
+        except KeyboardInterrupt:
+            print("输入 [bold red]exit[/bold red] 退出 CLI。")
+            continue
+        if not prompt:
+            continue
+        # Command Parsing
+        cmd = prompt.split(' ')
+        if cmd[0] == 'exit':
+            break
+        elif cmd[0] in commands:
+            try:
+                commands[cmd[0]](*cmd[1:])
+            except Exception as e:
+                if str(e).find('required positional argument') != -1 and str(repr(e)).find('TypeError') != -1:
+                    print(f"[bold red]命令 {cmd[0]} 缺少参数。[/bold red]\n输入 [bold green]help {cmd[0]}[/bold green] 查看帮助。")
+                else:
+                    console.print_exception()
+                    print(f"[bold red]命令 {cmd[0]} 执行时出现错误。[/bold red]")
+        else:
+            print(f"无效的命令 [bold red]{cmd[0]}[/bold red]。输入 [bold green]help[/bold green] 查看帮助。")
+        print()
+        
