@@ -6,6 +6,8 @@ import os
 from rich import print
 from PIL import Image # pip install pillow
 
+import viewer
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0',
     'referer': 'https://www.luogu.com.cn/',
@@ -166,3 +168,45 @@ def logout() -> bool:
     get_client_id()
     get_csrf()
     return True
+
+def save(stype, id) -> None:
+    '''保存洛谷内容（题目、题解、题单、讨论……）以供离线使用。
+    * stype: 类型（problem, solution, training, discuss
+    * id: ID'''
+    urlmap = {
+        'problem': '/problem/{id}',
+        'solution': '/problem/{id}/solution',
+        'training': '/training/{id}',
+        'discuss': '/discuss/{id}',
+    }
+    res = request(urlmap[stype].format(id=id))
+    data = res.json()
+    if data['code'] != 200:
+        print(f"[bold red]错误[/bold red]：{data['currentData']['errorMessage']}")
+        return
+    with open(f'saving/{stype}/{id}.json', 'w') as f:
+        f.write(json.dumps(data['currentData']))
+    print(f"已保存 [bold blue]{data['currentTitle']}[/bold blue] 的内容。")
+        
+def problem(pid) -> None:
+    '''使用可视化查看器查看题目。
+    * pid: 题目 ID'''
+    res = request('/problem/' + pid)
+    data = res.json()
+    if data['code'] != 200:
+        print(f"[bold red]错误[/bold red]：{data['currentData']['errorMessage']}")
+        return
+    view = viewer.ProblemViewer(problem=data['currentData']['problem'])
+    view.run()
+    
+def problem_offline(pid) -> None:
+    '''使用可视化查看器查看题目。
+    * pid: 题目 ID'''
+    try:
+        with open(f'saving/problem/{pid}.json', 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"找不到题目 [bold red]{pid}[/bold red] 的缓存文件。")
+        return
+    view = viewer.ProblemViewer(problem=data['problem'])
+    view.run()
