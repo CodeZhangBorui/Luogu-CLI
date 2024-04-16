@@ -3,6 +3,7 @@ import json
 import datetime
 import base64
 import os
+from time import sleep
 from rich import print
 from PIL import Image # pip install pillow
 
@@ -181,7 +182,18 @@ def save(stype, id) -> None:
         'discuss': '/discuss/{id}',
     }
     res = request(urlmap[stype].format(id=id))
-    data = res.json()
+    try:
+        data = res.json()
+    except json.JSONDecodeError:
+        if res.text.find("Your current behavior is detected as abnormal, Please try again later...") != -1:
+            print(f"[bold red]错误[/bold red]：触发洛谷限制：Your current behavior is detected as abnormal, Please try again later...")
+            print("等待 10 秒后重试。")
+            sleep(10)
+            save(stype, id)
+        else:
+            print(f"[bold red]错误[/bold red]：无法解析 JSON 数据。")
+            print(res.text)
+        return
     if data['code'] != 200:
         print(f"[bold red]错误[/bold red]：{data['currentData']['errorMessage']}")
         return
