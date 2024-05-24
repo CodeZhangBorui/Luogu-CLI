@@ -2483,6 +2483,12 @@
             "name": "THUSC",
             "type": 3,
             "parent": 431
+        },
+        {
+            "id": 434,
+            "name": "高校校赛",
+            "type": 3,
+            "parent": 430
         }
     ],
     "types": [
@@ -2517,5 +2523,5 @@
             "color": "grey-5"
         }
     ],
-    "version": 1713250596
+    "version": 1716543079
 }
