@@ -187,8 +187,8 @@ def save(stype, id) -> None:
     except json.JSONDecodeError:
         if res.text.find("Your current behavior is detected as abnormal, Please try again later...") != -1:
             print(f"[bold red]错误[/bold red]：触发洛谷限制：Your current behavior is detected as abnormal, Please try again later...")
-            print("等待 10 秒后重试。")
-            sleep(10)
+            print("等待 60 秒后重试。")
+            sleep(60)
             save(stype, id)
         else:
             print(f"[bold red]错误[/bold red]：无法解析 JSON 数据。")
